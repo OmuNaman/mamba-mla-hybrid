@@ -6,7 +6,9 @@ among **full attention**, **sliding-window attention (SWA)**, and **DeepSeek com
 perplexity, and synthetic dense recall. The contribution is a rigorous, fully traceable characterization
 plus a mechanistically-explained negative result, not a state-of-the-art or first-hybrid claim.
 
-📄 **Paper:** [paper/paper.pdf](paper/paper.pdf) · 💻 reproducible on [Modal](https://modal.com) ·
+📄 **Paper:** [paper/paper.pdf](paper/paper.pdf) ·
+🌐 **Project page:** https://omunaman.github.io/mamba-mla-hybrid/ ·
+💻 reproducible on [Modal](https://modal.com) ·
 🧪 every number traces to [results/results.jsonl](results/results.jsonl) (172 runs)
 
 ## Summary

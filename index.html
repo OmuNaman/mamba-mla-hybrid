@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compressed-Latent vs. Sliding-Window vs. Full Attention as Mamba-2's Partner</title>
+  <meta name="description" content="A controlled, matched-budget study of which attention partner a Mamba-2 backbone needs: full, sliding-window, or DeepSeek compressed-latent MLA." />
+  <meta property="og:title" content="Compressed-Latent vs. Sliding-Window vs. Full Attention as Mamba-2's Partner" />
+  <meta property="og:description" content="A controlled quality–cache–recall characterization at 125–350M parameters." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    h1, h2, h3, .serif { font-family: 'Newsreader', Georgia, serif; }
+    .wrap { max-width: 56rem; }
+    .wrap-wide { max-width: 68rem; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    html { scroll-behavior: smooth; }
+    .nav-link { transition: color .15s; }
+    .nav-link:hover { color: #0f172a; }
+    section { scroll-margin-top: 4.5rem; }
+  </style>
+</head>
+<body class="bg-white text-slate-800">
+
+  <!-- NAV -->
+  <nav class="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-slate-200">
+    <div class="mx-auto wrap-wide px-6 h-14 flex items-center justify-between">
+      <span class="font-semibold text-slate-900 text-sm">Mamba-MLA Partner Study</span>
+      <div class="hidden md:flex gap-6 text-sm text-slate-500">
+        <a href="#nutshell" class="nav-link">Summary</a>
+        <a href="#why" class="nav-link">Motivation</a>
+        <a href="#approach" class="nav-link">Approach</a>
+        <a href="#results" class="nav-link">Results</a>
+        <a href="#takeaways" class="nav-link">Takeaways</a>
+        <a href="#bibtex" class="nav-link">BibTeX</a>
+      </div>
+      <a href="https://github.com/OmuNaman/mamba-mla-hybrid" class="text-sm font-medium text-slate-700 hover:text-slate-900">Code ↗</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="px-6 pt-16 pb-10 text-center">
+    <div class="mx-auto wrap">
+      <p class="text-slate-500 font-medium tracking-wide uppercase text-xs mb-4">Vizuara AI Labs · Controlled architecture study</p>
+      <h1 class="text-3xl md:text-5xl font-semibold leading-tight text-slate-900">Compressed-Latent vs. Sliding-Window vs. Full Attention as Mamba-2's Partner</h1>
+      <p class="mt-4 text-lg md:text-xl text-slate-600 serif">A controlled quality–cache–recall characterization at 125–350M parameters</p>
+      <p class="mt-6 text-[1.05rem] text-slate-700">Naman Dwivedi, Raj Dandekar, Rajat Dandekar, Sreedath Panat</p>
+      <p class="mt-1 text-sm text-slate-500">Vizuara AI Labs · <a href="mailto:hello@vizuara.com" class="underline decoration-slate-300 hover:text-slate-700">hello@vizuara.com</a></p>
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <a href="static/paper.pdf" class="px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-700 transition">📄 Paper (PDF)</a>
+        <a href="https://github.com/OmuNaman/mamba-mla-hybrid" class="px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-700 transition">💻 Code</a>
+        <a href="#bibtex" class="px-5 py-2.5 rounded-full border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-100 transition">📑 BibTeX</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HEADLINE STATS -->
+  <section class="px-6 pb-4">
+    <div class="mx-auto wrap grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
+        <div class="text-3xl font-semibold text-slate-900 serif">5–30×</div>
+        <div class="mt-1 text-sm text-slate-600">smaller decode cache than full attention, at tied perplexity</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
+        <div class="text-3xl font-semibold text-slate-900 serif">tied</div>
+        <div class="mt-1 text-sm text-slate-600">the three Mamba hybrids are statistically indistinguishable on quality (Welch n.s.)</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
+        <div class="text-3xl font-semibold text-slate-900 serif">172 runs</div>
+        <div class="mt-1 text-sm text-slate-600">every number traces to a public, append-only results ledger</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IN A NUTSHELL -->
+  <section id="nutshell" class="px-6 py-10">
+    <div class="mx-auto wrap">
+      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-6 md:p-8">
+        <h2 class="text-xl font-semibold text-slate-900 mb-3">In a nutshell</h2>
+        <p class="text-slate-700 leading-relaxed">Long-context language models hit a memory wall: Transformers remember every token exactly but their key–value cache grows without bound, while state-space models like Mamba keep a small fixed memory and forget exact details. Hybrids combine the two, yet nobody had cleanly tested <em>which kind of attention a Mamba backbone actually needs</em>. We built six models that are matched in every way except one — the attention layer — and measured memory, quality, and recall. We find that DeepSeek's compressed-latent attention (MLA) gives a Mamba-2 hybrid the <strong>same quality as full attention while using 5 to 30 times less decode cache</strong>. We also report, honestly, a result that did not pan out: at this scale, compressing the latent further does not hurt recall, because the cache is simply never the bottleneck. We explain exactly why, and where the bottleneck would appear.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEASER FIGURE -->
+  <section class="px-6 pb-6">
+    <div class="mx-auto wrap">
+      <figure class="text-center">
+        <img src="static/figures/fig2_architecture.png" alt="The controlled-swap architecture" class="mx-auto rounded-xl shadow-sm border border-slate-200 bg-white" />
+        <figcaption class="mt-3 text-sm text-slate-500">The controlled swap: a shared Mamba-2 backbone with one interchangeable attention-partner slot (full attention, sliding-window, or compressed-latent MLA). Only that single layer changes across all six models.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ABSTRACT -->
+  <section class="px-6 py-10 bg-slate-50 border-y border-slate-200">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-slate-900 mb-4 text-center">Abstract</h2>
+      <p class="text-slate-700 leading-relaxed text-justify">State-space models such as Mamba-2 decode with a constant-size recurrent state but are weak at exact dense recall, whereas attention preserves recall at the cost of a growing key–value cache. Mamba-attention hybrids bridge this gap, yet existing ones either pair Mamba with <em>standard</em> attention or build a Mamba-plus-MLA model only by distillation or at production scale, so no work runs a controlled, from-scratch, matched-budget single-variable swap of the attention partner. We train, from scratch at 125M and 350M matched parameters, a Mamba-2 backbone whose only changed component is its attention partner among full attention, sliding-window attention (SWA), and DeepSeek compressed-latent MLA with decoupled rotary embeddings, and we directly measure decode-cache bytes, perplexity, and synthetic dense recall. We report two findings. First, the MLA hybrid keeps a decode cache 5 to 30 times smaller than full attention (80 MB vs 2416 MB at 64k context, size-S) at statistically indistinguishable perplexity (71.0 ± 1.8 vs 70.3 ± 2.0, three seeds, not significant), and we locate the SWA-to-MLA cache crossover. Second, we report a clean negative result: sweeping the MLA latent dimension over a dense multi-query recall grid reveals no minimum-latent knee in this short-context regime, because MLA caches the latent per token, making even a 16-dimensional latent non-binding for up to 64 key-value pairs at length 512. The result is a rigorous, fully traceable map of when compressed-latent attention helps a Mamba hybrid, and an honest boundary on the recall-versus-compression story.</p>
+    </div>
+  </section>
+
+  <!-- MOTIVATION -->
+  <section id="why" class="px-6 py-12">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-slate-900 mb-2">Why this is hard</h2>
+      <p class="text-slate-700 leading-relaxed mb-6">The two efficient-architecture families pull in opposite directions. A Transformer's cache grows linearly with context, so at 64k tokens a 125M model already needs over 2 GB of decode cache. Mamba-2 fixes this with a constant-size recurrent state, but a single fixed state cannot hold many exact key–value associations, so pure SSMs fail dense recall. Hybrids interleave a few attention layers into a Mamba backbone to recover recall cheaply. The open question is which <em>kind</em> of attention to interleave: full attention keeps a large growing cache; sliding-window attention bounds the cache but goes blind beyond its window; DeepSeek's MLA keeps full global attention but caches only a small per-token latent. Prior Mamba-plus-MLA models exist only as distilled or 48B-scale artifacts, so the controlled, single-variable comparison had never been run.</p>
+      <div class="grid grid-cols-1 gap-6">
+        <figure class="text-center">
+          <img src="static/figures/fig1_cache_vs_length.png" alt="Decode cache versus context length" class="mx-auto rounded-xl shadow-sm border border-slate-200 bg-white" />
+          <figcaption class="mt-2 text-sm text-slate-500">The memory wall, measured directly. Full attention's cache explodes with context; the MLA hybrid stays 5 to 30 times below it, bounded only by the windowed SWA and the constant Mamba-2 state.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPROACH -->
+  <section id="approach" class="px-6 py-12 bg-slate-50 border-y border-slate-200">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-slate-900 mb-2">Our approach</h2>
+      <p class="text-slate-700 leading-relaxed mb-5">We hold depth, width, tokenizer, data order, and total parameters fixed, and change only the attention-partner layer of a shared Mamba-2 backbone (shown above). Because exactly one thing varies, any difference in quality, cache, or recall is attributable to the attention operator alone. We pretrain on 2.0B FineWeb-Edu tokens, measure decode-cache in exact bytes, and probe dense recall both on the pretrained checkpoints and through small models trained directly on synthetic multi-query associative recall (MQAR).</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+        <div class="rounded-lg bg-white border border-slate-200 p-4">
+          <div class="text-sm font-semibold text-slate-900 mb-1">One variable changes</div>
+          <p class="text-sm text-slate-600">Non-embedding parameters are matched within 0.27% via the feed-forward width alone, so the comparison is genuinely single-variable.</p>
+        </div>
+        <div class="rounded-lg bg-white border border-slate-200 p-4">
+          <div class="text-sm font-semibold text-slate-900 mb-1">Faithful MLA</div>
+          <p class="text-sm text-slate-600">DeepSeek-V2 latent attention with decoupled RoPE: a low-rank latent <span class="serif">c<sup>KV</sup></span> plus a small shared rotary key, cached per token.</p>
+        </div>
+        <div class="rounded-lg bg-white border border-slate-200 p-4">
+          <div class="text-sm font-semibold text-slate-900 mb-1">Directly measured</div>
+          <p class="text-sm text-slate-600">Cache counted in exact bytes (not big-O); recall uses fresh-data-per-step MQAR so models must learn the algorithm, not memorize a fixed pool.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="px-6 py-12">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-slate-900 mb-5">Results</h2>
+      <div class="overflow-x-auto mb-3">
+        <table class="w-full text-sm border-collapse">
+          <thead><tr class="border-b-2 border-slate-300 text-left">
+            <th class="py-2 pr-4">Variant (size-S, 125M)</th>
+            <th class="py-2 pr-4">FineWeb ppl ↓</th>
+            <th class="py-2 pr-4">cache @64k (MB) ↓</th>
+            <th class="py-2 pr-4">passkey @4k ↑</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-slate-200"><td class="py-2 pr-4">Transformer (full attn)</td><td class="py-2 pr-4">96.19</td><td class="py-2 pr-4">2415.9</td><td class="py-2 pr-4">0.06 <span class="text-slate-400">(n=1)</span></td></tr>
+            <tr class="border-b border-slate-200"><td class="py-2 pr-4">Mamba-2 + full (Jamba)</td><td class="py-2 pr-4">70.34 ± 1.96</td><td class="py-2 pr-4">406.7</td><td class="py-2 pr-4">~0.85</td></tr>
+            <tr class="border-b border-slate-200"><td class="py-2 pr-4">Mamba-2 + SWA (Samba)</td><td class="py-2 pr-4"><strong>69.79 ± 2.82</strong></td><td class="py-2 pr-4">7.2 <span class="text-slate-400">(bounded)</span></td><td class="py-2 pr-4">~0.67</td></tr>
+            <tr class="border-b border-slate-200 bg-slate-50"><td class="py-2 pr-4"><strong>Mamba-2 + MLA (ours)</strong></td><td class="py-2 pr-4">71.00 ± 1.75</td><td class="py-2 pr-4"><strong>79.5</strong></td><td class="py-2 pr-4"><strong>0.94</strong></td></tr>
+            <tr class="border-b border-slate-200"><td class="py-2 pr-4">Mamba-2 (pure)</td><td class="py-2 pr-4">74.54</td><td class="py-2 pr-4">4.8 <span class="text-slate-400">(constant)</span></td><td class="py-2 pr-4">0.57</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-slate-500 mb-8">Size-S, 3 seeds for the hybrids (mean ± sample SD); references are single-seed. Cache is directly measured in bytes. Passkey is a qualitative length-extrapolation floor (the transformer reference is single-seed). Full numbers in the public ledger.</p>
+
+      <div class="space-y-3 text-slate-700 leading-relaxed mb-8">
+        <p><strong>MLA buys a 5 to 30 times cache reduction at no quality cost.</strong> At matched perplexity, the MLA hybrid's decode cache is an order of magnitude below full attention at every length we measured, bounded below only by the windowed SWA (which goes blind beyond its window) and the constant pure-Mamba state (which cannot do dense recall). Among the variants that keep global exact recall, MLA holds the smallest growing cache.</p>
+        <p><strong>The three Mamba hybrids are statistically tied on quality.</strong> Across three seeds, full, sliding-window, and MLA partners reach indistinguishable perplexity (pairwise Welch tests not significant). Compressing the attention cache with MLA therefore costs essentially no quality at this scale.</p>
+        <p><strong>The intended latent-dimension knee did not appear — and we explain why.</strong> We pre-registered a search for the smallest latent dimension that preserves recall. None was found: MLA caches its latent <em>per token</em>, so at length 512 even a 16-dimensional latent gives roughly 8,000 cached dimensions, far more than 64 key-value pairs require. The latent is simply not the binding constraint in this regime, so there is no knee to find. We report this as an honest null with its mechanism and the regime (longer context, smaller latent) where the knee would appear.</p>
+        <p><strong>The hybrid extrapolates beyond its training context.</strong> On passkey retrieval evaluated past the pretraining length, the Mamba hybrids hold while the pure dense Transformer collapses, consistent with rotary length-extrapolation limits rather than a recall deficit.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <figure class="text-center">
+          <img src="static/figures/fig3_quality_cache_pareto.png" alt="Quality–cache frontier" class="mx-auto rounded-xl shadow-sm border border-slate-200 bg-white" />
+          <figcaption class="mt-2 text-sm text-slate-500">Quality–cache frontier: the three hybrids sit at near-identical perplexity across an order-of-magnitude cache spread.</figcaption>
+        </figure>
+        <figure class="text-center">
+          <img src="static/figures/fig4_dc_null.png" alt="The d_c null" class="mx-auto rounded-xl shadow-sm border border-slate-200 bg-white" />
+          <figcaption class="mt-2 text-sm text-slate-500">The honest null: no minimum-latent knee. Recall is saturated at low density and seed-noise at the one hard density (per-seed points shown; no trend line through noise).</figcaption>
+        </figure>
+        <figure class="text-center">
+          <img src="static/figures/fig6_mqar_heatmap.png" alt="MQAR by variant" class="mx-auto rounded-xl shadow-sm border border-slate-200 bg-white" />
+          <figcaption class="mt-2 text-sm text-slate-500">Every variant solves up to 64 key-value pairs at length 512; the 128-pair column is uniformly noisy, so no separation is measurable at this scale.</figcaption>
+        </figure>
+        <figure class="text-center">
+          <img src="static/figures/fig5_passkey_extrapolation.png" alt="Passkey extrapolation" class="mx-auto rounded-xl shadow-sm border border-slate-200 bg-white" />
+          <figcaption class="mt-2 text-sm text-slate-500">Passkey accuracy beyond the pretraining context: the Mamba-MLA hybrid holds where the pure dense Transformer degrades.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- KEY TAKEAWAYS -->
+  <section id="takeaways" class="px-6 py-12 bg-slate-900 text-slate-100">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-white mb-6">Key takeaways</h2>
+      <ul class="space-y-4">
+        <li class="flex gap-3"><span class="text-slate-400 font-bold">1</span><p>A Mamba-2 backbone paired with compressed-latent MLA matches full-attention quality at 5 to 30 times smaller decode cache, with the SWA-to-MLA cache crossover located near 2,700 tokens.</p></li>
+        <li class="flex gap-3"><span class="text-slate-400 font-bold">2</span><p>At short context, the MLA latent dimension is not the bottleneck for dense recall: per-token caching keeps it ample even at a 16-dimensional latent, so the recall-versus-compression knee lives at longer context than this budget reached.</p></li>
+        <li class="flex gap-3"><span class="text-slate-400 font-bold">3</span><p>Negative results are reported as results. We pre-registered the knee search, did not find it, and explain the mechanism rather than hiding the null.</p></li>
+        <li class="flex gap-3"><span class="text-slate-400 font-bold">4</span><p>The whole study is single-variable, matched within 0.27%, and fully reproducible: every figure and table traces to a public 172-run ledger.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- LIMITATIONS -->
+  <section class="px-6 py-12">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-slate-900 mb-3">Limitations &amp; future work</h2>
+      <p class="text-slate-700 leading-relaxed">A single learning rate was shared across all architectures, so the pure-attention baselines' absolute perplexity should be read as an upper bound rather than an architectural verdict; the Mamba-hybrid comparison, which shares the regime, is unaffected. The scale and regime (125 to 350M parameters, training context 2048, synthetic length 512, 12,000 recall steps) leave the latent dimension non-binding and the densest recall column undertrained, so the latent-knee and Mamba-offload hypotheses are untested rather than refuted. All size-M runs and the pure references are single-seed, MLA's cache still grows with length (so SWA wins on memory below the crossover), and synthetic recall is not natural-text recall. Future work should push context to several thousand tokens with a smaller latent and longer training to place the latent on the critical path, add seeds, and test transfer on real retrieval benchmarks.</p>
+    </div>
+  </section>
+
+  <!-- BIBTEX -->
+  <section id="bibtex" class="px-6 py-12 bg-slate-50 border-y border-slate-200">
+    <div class="mx-auto wrap">
+      <h2 class="text-2xl font-semibold text-slate-900 mb-4">BibTeX</h2>
+      <pre class="bg-slate-900 text-slate-100 rounded-xl p-5 text-xs leading-relaxed overflow-x-auto">@misc{dwivedi2026mambamla,
+  title  = {Compressed-Latent vs. Sliding-Window vs. Full Attention as Mamba-2's Partner:
+            A Controlled Quality-Cache-Recall Characterization at 125-350M Parameters},
+  author = {Dwivedi, Naman and Dandekar, Raj and Dandekar, Rajat and Panat, Sreedath},
+  year   = {2026},
+  note   = {Vizuara AI Labs},
+  url    = {https://github.com/OmuNaman/mamba-mla-hybrid}
+}</pre>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="px-6 py-12 text-center text-sm text-slate-400">
+    <div class="mx-auto wrap space-y-2">
+      <p>Vizuara AI Labs · <a href="https://github.com/OmuNaman/mamba-mla-hybrid" class="underline decoration-slate-300 hover:text-slate-700">github.com/OmuNaman/mamba-mla-hybrid</a></p>
+      <p class="text-slate-400">Page design adapted from the
+        <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" class="underline decoration-slate-300 hover:text-slate-700">Academic Project Page Template</a>
+        (Nerfies), used under CC BY-SA 4.0.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Core training/eval stack (pinned to the Modal image in src/modal_app.py).
+# torch is installed from the CUDA 11.8 index on Modal:
+#   pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu118
+torch==2.4.0
+numpy==1.26.4
+transformers==4.44.2
+datasets==2.21.0
+tqdm==4.67.1
+einops==0.8.0
+huggingface-hub==0.24.6
+fsspec==2024.6.1
+pyarrow==17.0.0
+triton==3.0.0
+modal
+matplotlib
+
+# Mamba-2 CUDA kernel + causal-conv1d are installed in the Modal image from prebuilt wheels
+# (cu118 / torch 2.4 / cp311). A verified pure-PyTorch SSD fallback runs if they are absent.
+#   mamba-ssm==2.2.2
+#   causal-conv1d

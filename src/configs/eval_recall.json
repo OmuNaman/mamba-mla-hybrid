@@ -1,0 +1,197 @@
+{
+  "gpu": "A100-80GB",
+  "batch_configs": [
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_transformer_s0",
+      "ckpt": "/vol/S_transformer_s0/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba2_s0",
+      "ckpt": "/vol/S_mamba2_s0/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_full_s0",
+      "ckpt": "/vol/S_mamba_full_s0/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_swa_s0",
+      "ckpt": "/vol/S_mamba_swa_s0/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_mla_s0",
+      "ckpt": "/vol/S_mamba_mla_s0/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_transformer_mla_s0",
+      "ckpt": "/vol/S_transformer_mla_s0/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_full_s1",
+      "ckpt": "/vol/S_mamba_full_s1/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_full_s2",
+      "ckpt": "/vol/S_mamba_full_s2/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_swa_s1",
+      "ckpt": "/vol/S_mamba_swa_s1/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_swa_s2",
+      "ckpt": "/vol/S_mamba_swa_s2/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_mla_s1",
+      "ckpt": "/vol/S_mamba_mla_s1/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    },
+    {
+      "task": "recall_eval",
+      "exp_id": "R_S_mamba_mla_s2",
+      "ckpt": "/vol/S_mamba_mla_s2/model.pt",
+      "lengths": [
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "n_kv": 16,
+      "n_needles": 8,
+      "adapt_steps": 800,
+      "adapt_len": 256,
+      "adapt_lr": 0.001
+    }
+  ]
+}

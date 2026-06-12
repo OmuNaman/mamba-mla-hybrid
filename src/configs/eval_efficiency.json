@@ -1,0 +1,170 @@
+{
+  "gpu": "A100-80GB",
+  "batch_configs": [
+    {
+      "task": "efficiency",
+      "exp_id": "E_S_transformer_s0",
+      "ckpt": "/vol/S_transformer_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_S_mamba2_s0",
+      "ckpt": "/vol/S_mamba2_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_S_mamba_full_s0",
+      "ckpt": "/vol/S_mamba_full_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_S_mamba_swa_s0",
+      "ckpt": "/vol/S_mamba_swa_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_S_mamba_mla_s0",
+      "ckpt": "/vol/S_mamba_mla_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_S_transformer_mla_s0",
+      "ckpt": "/vol/S_transformer_mla_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_M_mamba_full_s0",
+      "ckpt": "/vol/M_mamba_full_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_M_mamba_swa_s0",
+      "ckpt": "/vol/M_mamba_swa_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_M_mamba_mla_s0",
+      "ckpt": "/vol/M_mamba_mla_s0/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_A1_mla_r3",
+      "ckpt": "/vol/A1_mla_r3/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    },
+    {
+      "task": "efficiency",
+      "exp_id": "E_A1_mla_r7",
+      "ckpt": "/vol/A1_mla_r7/model.pt",
+      "lengths": [
+        4096,
+        16384,
+        65536
+      ],
+      "batches": [
+        1,
+        4
+      ],
+      "require_kernel": true
+    }
+  ]
+}

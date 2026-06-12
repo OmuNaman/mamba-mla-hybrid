@@ -1,0 +1,6 @@
+{
+  "task": "pretokenize",
+  "exp_id": "pretokenize",
+  "gpu": "A10G",
+  "target_tokens": 2500000000
+}
